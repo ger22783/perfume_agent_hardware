@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     }
 
     const intent = await analyzeIntentWithLLM(message);
-    // 自动调配模式只允许选择当前五个泵实际装载的原料。
+    // 自动调配模式只允许选择当前四个泵实际装载的概念原料。
     const selectionPlan = selectMaterials(intent, activeMaterialIds);
     const target = buildTargetVector(intent);
 

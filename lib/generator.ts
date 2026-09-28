@@ -51,15 +51,13 @@ function clampUsage(material: BoothMaterial, desired: number) {
 
 function buildNotes(plan: SelectionPlan) {
   const used = new Set<string>();
-  const wantsSweet = plan.intent.desiredFacets.sweet >= 4 && !plan.intent.dislikes.includes('甜腻');
-  const wantsWoody = plan.intent.desiredFacets.woody >= 4;
   const wantsWatery = plan.intent.desiredFacets.watery >= 4;
 
   // 先保留最稀缺的后调位置，避免双角色原料先被中调占用后无可用 base。
-  const baseA = pickMaterial(plan, 'base', wantsSweet ? 'french-vanilla' : wantsWoody ? 'smoky-agarwood' : 'desert-rose', used);
-  const topA = pickMaterial(plan, 'top', wantsWatery ? 'sea-breeze-bell' : 'green-tea', used);
+  const baseA = pickMaterial(plan, 'base', 'desert-rose', used);
+  const topA = pickMaterial(plan, 'top', wantsWatery ? 'sea-breeze-bell' : 'japanese-citrus', used);
   const topB = pickMaterial(plan, 'top', 'japanese-citrus', used);
-  const heartA = pickMaterial(plan, 'heart', wantsSweet ? 'osmanthus-oolong' : 'jasmine-floral-ring', used);
+  const heartA = pickMaterial(plan, 'heart', 'osmanthus-oolong', used);
   const heartB = plan.heart.find((item) => !used.has(item.material.nameZh))?.material;
 
   let topNotes: NoteItem[] = [
@@ -73,7 +71,7 @@ function buildNotes(plan: SelectionPlan) {
     { name: baseA.nameZh, percentage: clampUsage(baseA, 24) }
   ];
 
-  if (heartB && heartB.nameZh !== heartA.nameZh && topNotes.length + heartNotes.length + baseNotes.length < 5) {
+  if (heartB && heartB.nameZh !== heartA.nameZh && topNotes.length + heartNotes.length + baseNotes.length < 4) {
     heartNotes.push({ name: heartB.nameZh, percentage: clampUsage(heartB, 8) });
   }
 
@@ -132,11 +130,11 @@ function buildFormula(plan: SelectionPlan): FormulaResponse {
       longevity: '约 3-6 小时留香，建议使用后 2-3 小时左右观察尾调变化'
     },
     adjustments: {
-      fresher: '想更清爽，下一轮提高绿茶、柑橘或海风类前调，降低香草、咖啡和厚重木质。',
-      softer: '想更柔和，下一轮增加桂花乌龙或水影浆果，让边缘更圆润。',
-      longerLasting: '想更持久，下一轮可以小幅提高乌木、玫瑰木质或香草类后调。'
+      fresher: '想更清爽，下一轮提高日系柑橘或海上风铃的比例。',
+      softer: '想更柔和，下一轮增加桂花乌龙，让边缘更圆润。',
+      longerLasting: '想让概念上的尾调更稳，下一轮可以小幅提高无人之境玫瑰。'
     },
-    safetyNote: '请在通风处使用，避开眼睛、口鼻和伤口；过敏体质请先小范围试用。'
+    safetyNote: '路演设备输出的是食品级色素水溶液，只用于展示配比与自动调配，不可饮用，也不代表真实香水的气味、留香或安全属性。'
   };
 }
 

@@ -19,7 +19,7 @@ BATCH_MAX_G = 100.0
 DEFAULT_TOLERANCE_G = 0.5
 
 DONE_RE = re.compile(
-    r"^D(?P<pump>[1-5])\s+DONE\s+actual=(?P<actual>[+-]?\d+(?:\.\d+)?)g\s+"
+    r"^D(?P<pump>[1-4])\s+DONE\s+actual=(?P<actual>[+-]?\d+(?:\.\d+)?)g\s+"
     r"target=(?P<target>[+-]?\d+(?:\.\d+)?)g\s+err=(?P<error>[+-]?\d+(?:\.\d+)?)g$"
 )
 
@@ -35,11 +35,11 @@ class DosingResult:
 
 
 def validate_recipe(steps: Any) -> list[tuple[int, float]]:
-    """Validate a 1-5 step recipe before any serial command is emitted."""
+    """Validate a 1-4 step recipe before any serial command is emitted."""
     if not isinstance(steps, list) or not steps:
         raise ValueError("配方为空")
-    if len(steps) > 5:
-        raise ValueError("配方最多包含 5 步")
+    if len(steps) > 4:
+        raise ValueError("配方最多包含 4 步")
 
     checked: list[tuple[int, float]] = []
     used_pumps: set[int] = set()
@@ -49,13 +49,13 @@ def validate_recipe(steps: Any) -> list[tuple[int, float]]:
         pump_raw = step.get("pump")
         grams_raw = step.get("grams")
         if isinstance(pump_raw, bool) or not isinstance(pump_raw, int):
-            raise ValueError(f"第{index}步泵号必须是整数 1~5，当前: {pump_raw}")
+            raise ValueError(f"第{index}步泵号必须是整数 1~4，当前: {pump_raw}")
         if isinstance(grams_raw, bool) or not isinstance(grams_raw, (int, float)):
             raise ValueError(f"第{index}步克数必须是数字，当前: {grams_raw}")
         pump = pump_raw
         grams = float(grams_raw)
-        if not 1 <= pump <= 5:
-            raise ValueError(f"第{index}步泵号必须是 1~5，当前: {pump}")
+        if not 1 <= pump <= 4:
+            raise ValueError(f"第{index}步泵号必须是 1~4，当前: {pump}")
         if pump in used_pumps:
             raise ValueError(f"泵{pump}重复出现，请先合并为一个步骤")
         if not 0.1 <= grams <= DOSING_MAX_G:

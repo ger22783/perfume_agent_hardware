@@ -67,7 +67,7 @@ describe('目标向量映射（intentVector）', () => {
 });
 
 describe('约束优化求解器（optimizer）', () => {
-  it('输出合法配方：3-5 种、总和 100、角色覆盖、原料在库', () => {
+  it('输出合法配方：3-4 种、总和 100、角色覆盖、原料在库', () => {
     const profile = analyzeIntent(SUMMER_COMMUTE);
     const target = buildTargetVector(profile);
     const plan = selectMaterials(profile);

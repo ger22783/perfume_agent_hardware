@@ -37,7 +37,7 @@ class HardwareJob(BaseModel):
     sessionId: str = Field(min_length=1)
     deviceId: str = Field(min_length=1)
     targetTotalG: float
-    steps: list[HardwareStep] = Field(min_length=3, max_length=5)
+    steps: list[HardwareStep] = Field(min_length=3, max_length=4)
 
 
 def is_dry_run() -> bool:

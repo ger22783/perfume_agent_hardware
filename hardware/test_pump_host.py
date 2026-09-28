@@ -8,6 +8,10 @@ class PumpHostTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_recipe([{"pump": 1, "grams": 2.0}, {"pump": 1, "grams": 3.0}])
 
+    def test_validate_recipe_rejects_fifth_pump(self):
+        with self.assertRaises(ValueError):
+            validate_recipe([{"pump": 5, "grams": 2.0}])
+
     def test_parse_done_returns_structured_measurement(self):
         result = parse_done("D2 DONE actual=5.2g target=5.0g err=+0.2g", 2)
         self.assertIsNotNone(result)

@@ -1,11 +1,30 @@
 export type Lang = 'zh' | 'en';
 
+export type LocalizedText = Record<Lang, string>;
+
+export const quickPrompts: LocalizedText[] = [
+  { zh: '清爽、不甜、适合夏天通勤', en: 'Fresh, not sweet, for a summer commute' },
+  { zh: '雨天、安静、像图书馆', en: 'Quiet and library-like on a rainy day' },
+  { zh: '温柔一点，适合约会', en: 'Soft and gentle for a date' },
+  { zh: '木质、沉稳、适合阅读', en: 'Woody and grounded for reading' },
+  { zh: '适合运动后，清凉、轻盈', en: 'Cool and light after a workout' },
+  { zh: '想要茶香，不要太花', en: 'Tea-like, without too many florals' },
+  { zh: '今天心情低落，想要治愈一点', en: 'Something comforting for a low mood' },
+  { zh: '想要海风感，清透、干净', en: 'Airy and clean like a sea breeze' },
+  { zh: '适合第一次体验，安全不出错', en: 'A safe first-time formula' },
+  { zh: '浪漫、有记忆点，但不要太甜', en: 'Romantic and memorable, but not too sweet' }
+];
+
 export const t = {
-  siteTitle: { zh: 'Perfume Agent · 定制香水', en: 'Perfume Agent · Custom' },
-  heroTitle: { zh: '几十秒，生成属于你的专属香水', en: 'Your signature perfume in seconds' },
+  siteTitle: { zh: 'Aromacell Formula Lab', en: 'Aromacell Formula Lab' },
+  brandName: { zh: 'AI 个性化香氛', en: 'AI Personalized Fragrance' },
+  brandTeam: { zh: '西湖大学 iGEM 2026', en: 'iGEM Westlake 2026' },
+  eyebrow: { zh: '合成生物学 × AI × 自动调配', en: 'SYNTHETIC BIOLOGY × AI × AUTOMATED BLENDING' },
+  cardNumber: { zh: '配方工作台 · 专业版', en: 'FORMULA DESK · PRO EDITION' },
+  heroTitle: { zh: '把感觉，变成一杯看得见的配方', en: 'Turn a feeling into a visible formula' },
   heroDesc: {
-    zh: '告诉它你今天想要的感觉——清爽、水感、木质还是甜暖。Agent 会从原料库中求解出最贴近你需求的配方，一键发送到你的 Aromacell，由它按比例自动调配出专属于你的香水。',
-    en: 'Tell it how you want to feel today. The agent solves the formula that fits you best, then sends it to your Aromacell to craft your signature perfume.'
+    zh: '描述你想要的香气感觉，Agent 会在四路概念原料中求解比例，再由 Aromacell 称重调配成彩色水溶液。路演输出用于展示算法与硬件闭环，不是真实香水。',
+    en: 'Describe the scent you imagine. The agent solves a four-material formula and Aromacell blends a colored-water visualization by weight. The booth output demonstrates the algorithm and hardware loop; it is not perfume.'
   },
   qrHint: { zh: '扫码在手机上体验', en: 'Scan to try on your phone' },
   modeEnum: { zh: '约束优化', en: 'Optimized' },
@@ -40,8 +59,21 @@ export const t = {
   },
   hardwarePreviewTitle: { zh: 'Aromacell 加注预览', en: 'Aromacell dosing preview' },
   hardwarePreviewHint: {
-    zh: '百分比已换算为克数；确认后将按泵号顺序加注。',
-    en: 'Percentages are converted to grams and dispensed sequentially by pump.'
+    zh: '百分比已换算为克数与估算体积；确认后将按泵号顺序加注。',
+    en: 'Percentages are converted to grams and estimated volume, then dispensed sequentially.'
+  },
+  materialLibraryTitle: { zh: '四路概念原料库', en: 'Four-channel material library' },
+  materialLibraryHint: {
+    zh: '四种角色覆盖前、中、后调；实体瓶中装的是低浓度彩色水溶液。',
+    en: 'Four roles cover top, heart, and base notes; the physical bottles contain dilute colored water.'
+  },
+  materialColor: { zh: '显色', en: 'Color' },
+  materialConcentration: { zh: '建议色素浓度', en: 'Suggested dye concentration' },
+  materialDensity: { zh: '估算密度（20°C）', en: 'Estimated density (20°C)' },
+  simulationNotice: { zh: '路演模拟介质', en: 'Booth simulation medium' },
+  simulationNoticeDesc: {
+    zh: '食品级色素并不等于可饮用；所有成品只作封闭容器展示。浓度和密度是起始工程假设，正式路演前须逐泵实测校准。',
+    en: 'Food-grade dye does not make the output drinkable. Keep every blend in a closed display vessel. Concentration and density are starting engineering assumptions and must be calibrated per pump.'
   },
   batchWeight: { zh: '总质量', en: 'Total weight' },
   pumpLabel: { zh: '泵', en: 'Pump ' },
@@ -72,7 +104,7 @@ export const t = {
   blockPositioning: { zh: '香气定位', en: 'Scent positioning' },
   blockBlending: { zh: '配方比例', en: 'Formula ratios' },
   blockFormula: { zh: '配方结构', en: 'Formula structure' },
-  blockEffect: { zh: '闻起来会怎样', en: 'Expected effect' },
+  blockEffect: { zh: '概念香气效果', en: 'Conceptual scent effect' },
   blockSafety: { zh: '安全提醒', en: 'Safety note' },
   labelStyle: { zh: '风格', en: 'Style' },
   labelKeywords: { zh: '关键词', en: 'Keywords' },

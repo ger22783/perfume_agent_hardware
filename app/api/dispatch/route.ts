@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     }
 
     const controller = new AbortController();
-    // 固件允许单步最长 300 秒，五泵按顺序执行；HTTP 总等待需覆盖完整批次。
+    // 固件允许单步最长 300 秒，四泵按顺序执行；HTTP 总等待需覆盖完整批次。
     const timeout = setTimeout(() => controller.abort(), 1_550_000);
     let response: Response;
     try {

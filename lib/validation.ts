@@ -34,8 +34,8 @@ export function assertUsableFormula(formula: FormulaResponse) {
   }
 
   const notes = allNotes(formula);
-  if (notes.length < 3 || notes.length > 5) {
-    throw new Error('配方必须包含 3-5 种原料。');
+  if (notes.length < 3 || notes.length > 4) {
+    throw new Error('四泵配方必须包含 3-4 种原料。');
   }
 
   const uniqueNames = new Set(notes.map((item) => item.name));

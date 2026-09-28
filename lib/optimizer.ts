@@ -14,7 +14,7 @@ import { TARGET_DIMS, targetVectorToArray, weightsToArray } from './intentVector
  *
  * 求解策略（枚举 + 投影梯度下降）：
  *   1. 从选材模块的候选池构建「原料-角色」候选对（同原料取最优角色）
- *   2. 枚举所有 3/4/5 原料组合，过滤不满足角色覆盖的组合
+ *   2. 枚举所有 3/4 原料组合，过滤不满足角色覆盖的组合
  *   3. 每组组合内用投影梯度下降（PGD）���确求解比例
  *   4. 剔除 <1% 的原料后重新归一化，再次校验结构
  *   5. 取总误差 ||Aw − y||² 最小的合法组合
@@ -56,7 +56,7 @@ const TOL = 1e-9;
 
 /**
  * 同一种原料只进入候选池一次。双角色原料优先分配给候选更少的稀缺角色，
- * 避免五泵配置里玫瑰先占 heart 后导致 base 无候选，同时控制枚举规模。
+ * 避免四泵配置里玫瑰先占 heart 后导致 base 无候选，同时控制枚举规模。
  */
 function buildPool(plan: SelectionPlan): PoolItem[] {
   const roles: Array<'top' | 'heart' | 'base'> = ['top', 'heart', 'base'];
@@ -276,11 +276,11 @@ function buildFormula(items: PoolItem[], w: number[], plan: SelectionPlan, targe
       longevity: '约 3-6 小时留香，建议使用后 2-3 小时左右观察尾调变化'
     },
     adjustments: {
-      fresher: '想更清爽，下一轮提高绿茶、柑橘或海风类前调，降低香草、咖啡和厚重木质。',
-      softer: '想更柔和，下一轮增加桂花乌龙或水影浆果，让边缘更圆润。',
-      longerLasting: '想更持久，下一轮可以小幅提高乌木、玫瑰木质或香草类后调。'
+      fresher: '想更清爽，下一轮提高日系柑橘或海上风铃的比例。',
+      softer: '想更柔和，下一轮增加桂花乌龙，让边缘更圆润。',
+      longerLasting: '想让概念上的尾调更稳，下一轮可以小幅提高无人之境玫瑰。'
     },
-    safetyNote: '请在通风处使用，避开眼睛、口鼻和伤口；过敏体质请先小范围试用。',
+    safetyNote: '路演设备输出的是食品级色素水溶液，只用于展示配比与自动调配，不可饮用，也不代表真实香水的气味、留香或安全属性。',
     targetVector: target,
     error,
     solveMode: 'enum'
@@ -300,7 +300,7 @@ export function solveFormula(plan: SelectionPlan, target: TargetVector): SolverO
   const W = weightsToArray(target);
 
   let best: SolvedCombo | null = null;
-  for (const size of [3, 4, 5]) {
+  for (const size of [3, 4]) {
     for (const combo of combinations(pool, size)) {
       const materialIds = new Set(combo.map((item) => item.candidate.material.id));
       if (materialIds.size !== combo.length) continue;

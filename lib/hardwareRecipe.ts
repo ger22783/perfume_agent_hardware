@@ -82,8 +82,8 @@ function allocateTenths(percentages: number[], totalTenths: number) {
 export function buildHardwareSteps(formula: FormulaResponse, targetTotalG: number): HardwareStep[] {
   assertBatchGrams(targetTotalG);
   const notes = allNotes(formula);
-  if (notes.length < 3 || notes.length > 5) {
-    throw new Error('硬件配方必须包含 3-5 种原料。');
+  if (notes.length < 3 || notes.length > activeHardwareProfile.pumps.length) {
+    throw new Error(`硬件配方必须包含 3-${activeHardwareProfile.pumps.length} 种原料。`);
   }
 
   const totalPercentage = notes.reduce((sum, note) => sum + note.percentage, 0);

@@ -27,22 +27,22 @@ describe('Aromacell hardware recipe adapter', () => {
     const formula = formulaWith({
       top: '日系柑橘',
       heart: '桂花乌龙',
-      base: '法国香草'
+      base: '无人之境玫瑰'
     });
     const steps = buildHardwareSteps(formula, 20);
     expect(steps.map((step) => [step.pump, step.grams])).toEqual([
       [1, 5],
       [3, 7],
-      [5, 8]
+      [4, 8]
     ]);
     expect(steps.reduce((sum, step) => sum + step.grams, 0)).toBe(20);
   });
 
-  it('rejects a formula containing material not loaded in the five pumps', () => {
+  it('rejects a formula containing material not loaded in the four pumps', () => {
     const formula = formulaWith({
       top: '青盈绿茶',
       heart: '桂花乌龙',
-      base: '法国香草'
+      base: '无人之境玫瑰'
     });
     expect(() => buildHardwareSteps(formula, 20)).toThrow('当前没有装入 Aromacell');
   });
@@ -57,11 +57,11 @@ describe('Aromacell hardware recipe adapter', () => {
       ...solved!.formula.formula.heartNotes,
       ...solved!.formula.formula.baseNotes
     ];
-    const mountedNames = new Set(['日系柑橘', '海上风铃', '桂花乌龙', '无人之境玫瑰', '法国香草']);
+    const mountedNames = new Set(['日系柑橘', '海上风铃', '桂花乌龙', '无人之境玫瑰']);
     notes.forEach((note) => expect(mountedNames.has(note.name)).toBe(true));
   });
 
-  it('five-pump profile keeps a valid base note for a not-sweet request', () => {
+  it('four-pump profile keeps a valid base note for a not-sweet request', () => {
     const intent = analyzeIntent('清爽、不甜、适合夏天通勤');
     const plan = selectMaterials(intent, activeMaterialIds);
     const solved = solveFormula(plan, buildTargetVector(intent));
