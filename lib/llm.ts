@@ -1,5 +1,7 @@
-import { buildExplanationContext, SYSTEM_PROMPT } from './prompt';
+import { buildExplanationContext, getSystemPrompt } from './prompt';
 import type { FormulaResponse } from './types';
+import type { Lang } from './i18n';
+import { getLlmConfig } from './llmConfig';
 
 /**
  * LLM 客户端（改造后）
@@ -8,14 +10,6 @@ import type { FormulaResponse } from './types';
  * 模型输入配方结构 + 目标向量 + 误差，输出 ≤300 字人话解释。
  * 任何失败（无 key / 超时 / 非 JSON）都返回 null，由调用方回退模板文案。
  */
-
-function getEnv(name: string) {
-  return process.env[name]?.trim();
-}
-
-function normalizeBaseUrl(baseUrl: string) {
-  return baseUrl.replace(/\/+$/, '');
-}
 
 function extractJsonObject(content: string) {
   const text = content.trim();
@@ -34,32 +28,30 @@ function extractJsonObject(content: string) {
   }
 }
 
-export async function generateExplanation(formula: FormulaResponse): Promise<string | null> {
-  const apiKey = getEnv('OPENAI_API_KEY');
-  if (!apiKey) return null;
+export async function generateExplanation(formula: FormulaResponse, lang: Lang = 'zh'): Promise<string | null> {
+  const config = getLlmConfig();
+  if (!config) return null;
 
-  const baseUrl = normalizeBaseUrl(getEnv('OPENAI_BASE_URL') || 'https://api.openai.com/v1');
-  const model = getEnv('OPENAI_MODEL') || 'gpt-4.1-mini';
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
-  const context = buildExplanationContext(formula);
+  const context = buildExplanationContext(formula, lang);
 
   let response: Response;
   try {
-    response = await fetch(`${baseUrl}/chat/completions`, {
+    response = await fetch(`${config.baseUrl}/chat/completions`, {
       method: 'POST',
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`
+        Authorization: `Bearer ${config.apiKey}`
       },
       body: JSON.stringify({
-        model,
+        model: config.model,
         max_tokens: 800,
         temperature: 0.5,
         response_format: { type: 'json_object' },
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: getSystemPrompt(lang) },
           { role: 'system', content: context }
         ]
       })
@@ -94,7 +86,16 @@ export async function generateExplanation(formula: FormulaResponse): Promise<str
   try {
     const parsed = extractJsonObject(rawContent);
     const replyText = String(parsed?.replyText || '').trim();
-    return replyText.length >= 10 ? replyText : null;
+    if (replyText.length < 10) return null;
+    if (lang === 'en' && /[\u3400-\u9fff]/.test(replyText)) {
+      console.warn('LLM returned Chinese copy for an English request; using the English template.');
+      return null;
+    }
+    if (lang === 'zh' && !/[\u3400-\u9fff]/.test(replyText)) {
+      console.warn('LLM returned non-Chinese copy for a Chinese request; using the Chinese template.');
+      return null;
+    }
+    return replyText;
   } catch {
     return null;
   }

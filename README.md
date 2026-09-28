@@ -32,8 +32,8 @@
 
 ## 模型角色
 
-- **意图解析**：可选调用 `OPENAI_MODEL` 解析结构化意图，超时/失败自动回退本地规则。
-- **解释文案**：默认用确定性模板；设置 `EXPLAIN_LLM=true` 时用模型润色文案（失败回退模板）。
+- **意图解析**：配置 DeepSeek 或 OpenAI-compatible Key 后调用在线模型解析结构化意图，超时/失败自动回退本地规则。
+- **解释文案**：有 Key 时默认由在线模型动态生成；无 Key、超时或接口失败时回退本地模板。网页右上角会明确显示“AI 实时回答”或“本地模板”。
 - **配方比例**：始终由约束优化求解器（`lib/optimizer.ts`）计算，不依赖模型。
 
 ## 核心功能
@@ -148,10 +148,15 @@ python -m uvicorn hardware.bridge:app --host 127.0.0.1 --port 8765
 ## 环境变量
 
 ```text
-OPENAI_API_KEY=             # 意图解析 / 解释增强用（可留空，走本地规则）
-OPENAI_BASE_URL=
-OPENAI_MODEL=deepseek-v4-flash
-EXPLAIN_LLM=false           # true 时用 LLM 润色解释文案
+DEEPSEEK_API_KEY=           # 从 DeepSeek 控制台创建；不要提交到 Git
+DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
+DEEPSEEK_MODEL=deepseek-chat
+EXPLAIN_LLM=true            # 有 Key 时默认实时生成；false 可强制本地模板
+
+# 也可改用 OpenAI-compatible 服务：
+# OPENAI_API_KEY=
+# OPENAI_BASE_URL=https://api.openai.com/v1
+# OPENAI_MODEL=gpt-4.1-mini
 DATABASE_URL=               # Neon（也可用 POSTGRES_URL 等）
 POSTGRES_URL=
 HARDWARE_API_URL=http://127.0.0.1:8765/v1/jobs

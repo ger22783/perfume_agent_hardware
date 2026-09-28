@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { activeHardwareProfile, type PumpSlot } from '@/data/hardwareProfile';
 import type { ChatMessage, GenerateResponse, NoteItem } from '@/lib/types';
 import { quickPrompts, type Lang, t } from '@/lib/i18n';
+import { materialDisplayName } from '@/lib/localization';
 import {
   BATCH_GRAM_OPTIONS,
   buildHardwareSteps,
@@ -170,6 +171,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="header-actions">
+            {result ? <span className={`mode-pill ${result.ai?.explanation === 'llm' ? 'is-live' : 'is-local'}`}><span className="mode-dot" />{result.ai?.explanation === 'llm' ? tr('sourceLLM') : tr('sourceLocal')}</span> : null}
             <span className="mode-pill"><span className="mode-dot" />{result?.mode === 'enum' ? tr('modeEnum') : result?.mode === 'explain' ? tr('modeExplain') : tr('modeHeuristic')}</span>
             <div className="language-switch" aria-label="Language">
               <button onClick={() => changeLanguage('zh')} className={lang === 'zh' ? 'is-active' : ''}>ZH</button>
@@ -329,6 +331,7 @@ export default function HomePage() {
                       topNotes={result.formula.formula.topNotes}
                       heartNotes={result.formula.formula.heartNotes}
                       baseNotes={result.formula.formula.baseNotes}
+                      lang={lang}
                       labels={{ top: tr('topNotes'), heart: tr('heartNotes'), base: tr('baseNotes') }}
                     />
                     <p className="safety-note">{result.formula.safetyNote}</p>
@@ -349,9 +352,9 @@ export default function HomePage() {
                   </div>
                   <Block title={tr('blockFormula')}>
                     <div className="notes-grid">
-                      <NotesSection title={tr('topNotes')} items={result.formula.formula.topNotes} />
-                      <NotesSection title={tr('heartNotes')} items={result.formula.formula.heartNotes} />
-                      <NotesSection title={tr('baseNotes')} items={result.formula.formula.baseNotes} />
+                      <NotesSection title={tr('topNotes')} items={result.formula.formula.topNotes} lang={lang} />
+                      <NotesSection title={tr('heartNotes')} items={result.formula.formula.heartNotes} lang={lang} />
+                      <NotesSection title={tr('baseNotes')} items={result.formula.formula.baseNotes} lang={lang} />
                     </div>
                   </Block>
                   {result.formula.error ? <ErrorBlock result={result} tr={tr} /> : null}
@@ -418,11 +421,12 @@ function DosingRow({ step, lang, pumpLabel }: { step: HardwareStep; lang: Lang; 
   );
 }
 
-function FormulaRatioBar({ topNotes, heartNotes, baseNotes, labels }: {
+function FormulaRatioBar({ topNotes, heartNotes, baseNotes, labels, lang }: {
   topNotes: NoteItem[];
   heartNotes: NoteItem[];
   baseNotes: NoteItem[];
   labels: { top: string; heart: string; base: string };
+  lang: Lang;
 }) {
   const segments = [
     ...topNotes.map((note) => ({ ...note, role: labels.top })),
@@ -443,7 +447,7 @@ function FormulaRatioBar({ topNotes, heartNotes, baseNotes, labels }: {
         {segments.map((segment) => (
           <div key={segment.name}>
             <span className="legend-dot" style={{ backgroundColor: segment.color }} />
-            <span>{segment.name}</span><small>{segment.role}</small><strong>{segment.percentage}%</strong>
+            <span>{materialDisplayName(segment.name, lang)}</span><small>{segment.role}</small><strong>{segment.percentage}%</strong>
           </div>
         ))}
       </div>
@@ -455,13 +459,13 @@ function Line({ label, value }: { label: string; value: string }) {
   return <p className="detail-line"><span>{label}</span>{value || '-'}</p>;
 }
 
-function NotesSection({ title, items }: { title: string; items: NoteItem[] }) {
+function NotesSection({ title, items, lang }: { title: string; items: NoteItem[]; lang: Lang }) {
   return (
     <div className="notes-section">
       <p className="notes-title">{title}</p>
       {items.map((item) => {
         const color = activeHardwareProfile.pumps.find((slot) => slot.materialName === item.name)?.colorHex;
-        return <div key={`${title}-${item.name}`} className="note-card"><span className="legend-dot" style={{ backgroundColor: color }} /><strong>{item.name}</strong><span>{item.percentage}%</span></div>;
+        return <div key={`${title}-${item.name}`} className="note-card"><span className="legend-dot" style={{ backgroundColor: color }} /><strong>{materialDisplayName(item.name, lang)}</strong><span>{item.percentage}%</span></div>;
       })}
     </div>
   );

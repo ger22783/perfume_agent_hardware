@@ -1,5 +1,7 @@
 import { boothMaterials } from '@/data/ingredients';
 import type { FormulaResponse } from './types';
+import type { Lang } from './i18n';
+import { materialDescription, materialDisplayName, materialFamily, materialRoleText } from './localization';
 
 const explanationTriggers = [
   '为什么',
@@ -14,11 +16,11 @@ const explanationTriggers = [
   'purpose'
 ];
 
-function allNotes(formula: FormulaResponse) {
+function allNotes(formula: FormulaResponse, lang: Lang) {
   return [
-    ...formula.formula.topNotes.map((item) => ({ ...item, role: '前调' })),
-    ...formula.formula.heartNotes.map((item) => ({ ...item, role: '中调' })),
-    ...formula.formula.baseNotes.map((item) => ({ ...item, role: '后调' }))
+    ...formula.formula.topNotes.map((item) => ({ ...item, role: lang === 'en' ? 'top notes' : '前调' })),
+    ...formula.formula.heartNotes.map((item) => ({ ...item, role: lang === 'en' ? 'heart notes' : '中调' })),
+    ...formula.formula.baseNotes.map((item) => ({ ...item, role: lang === 'en' ? 'base notes' : '后调' }))
   ];
 }
 
@@ -28,18 +30,14 @@ export function isExplanationQuestion(message: string) {
 }
 
 /** 优化求解模式的解释文案：定位 + 搭配理由（依据用户目标向量与原料库职责） */
-export function buildOptimizedReply(formula: FormulaResponse): string {
+export function buildOptimizedReply(formula: FormulaResponse, lang: Lang = 'zh'): string {
   const positioning = formula.fragrancePositioning;
   const target = formula.targetVector;
   const topNotes = formula.formula.topNotes;
   const heartNotes = formula.formula.heartNotes;
   const baseNotes = formula.formula.baseNotes;
 
-  const nameList = (notes: Array<{ name: string }>) => notes.map((note) => note.name).join('、') || '';
-  const pickMaterial = (notes: Array<{ name: string }>) => {
-    const first = notes[0];
-    return first ? boothMaterials.find((item) => item.nameZh === first.name) : undefined;
-  };
+  const nameList = (notes: Array<{ name: string }>) => notes.map((note) => materialDisplayName(note.name, lang)).join(lang === 'en' ? ', ' : '、') || '';
 
   const topNames = nameList(topNotes);
   const heartNames = nameList(heartNotes);
@@ -48,21 +46,35 @@ export function buildOptimizedReply(formula: FormulaResponse): string {
   // 依据目标向量，提炼用户最想要的气味方向（仅在用户非常明确提到时，阈值 ≥5，避免"无中生有"）
   const desires: string[] = [];
   if (target) {
-    if (target.facets.fresh >= 5) desires.push('想清爽');
-    if (target.facets.watery >= 5) desires.push('想要水感清凉');
-    if (target.facets.floral >= 5) desires.push('想要花香');
-    if (target.facets.woody >= 5) desires.push('想要沉稳木质');
-    if (target.facets.warm >= 5) desires.push('想要温暖感');
-    if (target.facets.sweet >= 5) desires.push('想要一点甜意');
+    if (target.facets.fresh >= 5) desires.push(lang === 'en' ? 'freshness' : '想清爽');
+    if (target.facets.watery >= 5) desires.push(lang === 'en' ? 'an aquatic, cooling feel' : '想要水感清凉');
+    if (target.facets.floral >= 5) desires.push(lang === 'en' ? 'a floral character' : '想要花香');
+    if (target.facets.woody >= 5) desires.push(lang === 'en' ? 'a grounded woody character' : '想要沉稳木质');
+    if (target.facets.warm >= 5) desires.push(lang === 'en' ? 'warmth' : '想要温暖感');
+    if (target.facets.sweet >= 5) desires.push(lang === 'en' ? 'a touch of sweetness' : '想要一点甜意');
   }
 
-  const topReason = pickMaterial(topNotes)?.professionalRole || '负责开场的第一印象';
-  const heartReason = pickMaterial(heartNotes)?.professionalRole || '负责主体气质';
-  const baseReason = pickMaterial(baseNotes)?.professionalRole || '负责收尾与留香';
+  const topReason = topNotes[0] ? materialRoleText(topNotes[0].name, lang) : (lang === 'en' ? 'It shapes the opening impression.' : '负责开场的第一印象');
+  const heartReason = heartNotes[0] ? materialRoleText(heartNotes[0].name, lang) : (lang === 'en' ? 'It defines the main character.' : '负责主体气质');
+  const baseReason = baseNotes[0] ? materialRoleText(baseNotes[0].name, lang) : (lang === 'en' ? 'It supports the finish.' : '负责收尾与留香');
   const stripPunct = (text: string) => text.replace(/[。！？!?]$/, '');
 
   const allNotes = [...topNotes, ...heartNotes, ...baseNotes];
   const main = allNotes.reduce((a, b) => (b.percentage > a.percentage ? b : a), allNotes[0]);
+
+  if (lang === 'en') {
+    const structureLine = desires.length
+      ? `Because you asked for ${desires.join(', ')}, the top uses ${topNames}—${topReason} The heart centers on ${heartNames}—${heartReason} The base finishes with ${baseNames}—${baseReason}`
+      : `The top uses ${topNames}—${topReason} The heart centers on ${heartNames}—${heartReason} The base finishes with ${baseNames}—${baseReason}`;
+    const parts = [
+      `This is a “${positioning.style}” formula with a ${positioning.keywords.join(', ')} profile, designed for ${positioning.suitableScenarios.join(', ')}.`,
+      structureLine
+    ];
+    if (main) {
+      parts.push(`${materialDisplayName(main.name, lang)} has the largest share at ${main.percentage}%, forming the backbone while the other materials add transitions and depth.`);
+    }
+    return parts.join(' ');
+  }
 
   const parts: string[] = [];
   parts.push(`这版定位成「${positioning.style}」，关键词${positioning.keywords.join('、')}，适合${positioning.suitableScenarios.join('、')}。`);
@@ -81,8 +93,8 @@ export function buildOptimizedReply(formula: FormulaResponse): string {
   return parts.join('');
 }
 
-export function buildFormulaExplanation(message: string, formula: FormulaResponse) {
-  const notes = allNotes(formula);
+export function buildFormulaExplanation(message: string, formula: FormulaResponse, lang: Lang = 'zh') {
+  const notes = allNotes(formula, lang);
   const mentionedNote = notes.find((note) => message.includes(note.name));
   const target = mentionedNote || notes.find((note) => {
     const material = boothMaterials.find((item) => item.nameZh === note.name);
@@ -91,9 +103,18 @@ export function buildFormulaExplanation(message: string, formula: FormulaRespons
 
   if (target) {
     const material = boothMaterials.find((item) => item.nameZh === target.name);
-    const family = material?.family || '当前香调';
-    const description = material?.description || '它主要负责补足配方里的气味层次。';
+    const family = materialFamily(target.name, lang);
+    const description = materialDescription(target.name, lang);
     const moods = material?.moods?.slice(0, 3).join('、') || '整体氛围';
+
+    if (lang === 'en') {
+      const displayName = materialDisplayName(target.name, lang);
+      return [
+        `${displayName} is included for structure rather than to dominate the blend. It works within the ${target.role}.`,
+        `It belongs to the ${family} family and makes up ${target.percentage}% of this formula, contributing ${description}.`,
+        'Its job is to connect the surrounding notes more naturally. This answer explains the existing formula without changing it; ask for a fresher replacement or removal if you want a revision.'
+      ].join(' ');
+    }
 
     return [
       `这里加入「${target.name}」不是为了单独突出它，而是让它在${target.role}里承担结构作用。`,
@@ -104,7 +125,16 @@ export function buildFormulaExplanation(message: string, formula: FormulaRespons
   }
 
   const style = formula.fragrancePositioning.style || '这版香气';
-  const noteSummary = notes.map((note) => `${note.role} ${note.name} ${note.percentage}%`).join('；');
+  const noteSummary = notes.map((note) => `${note.role} ${materialDisplayName(note.name, lang)} ${note.percentage}%`).join(lang === 'en' ? '; ' : '；');
+
+  if (lang === 'en') {
+    return [
+      `The “${formula.fragrancePositioning.style || 'current scent'}” formula starts from the requested mood and occasion, then assigns a clear job to each stage.`,
+      `The current structure is: ${noteSummary}.`,
+      'Top notes shape the first impression, heart notes define the main character, and base notes stabilize the finish.',
+      'This is an explanation, so the formula stays unchanged unless you explicitly ask for a revision.'
+    ].join(' ');
+  }
 
   return [
     `这版「${style}」的逻辑是先确定场景和情绪，再用前中后调分工把体验做完整。`,

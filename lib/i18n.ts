@@ -32,6 +32,8 @@ export const t = {
   modeExplain: { zh: '配方解释', en: 'Explanation' },
   modeLLM: { zh: '在线模型', en: 'Live model' },
   modeFallback: { zh: '本地求解', en: 'Local solver' },
+  sourceLLM: { zh: 'AI 实时回答', en: 'Live AI response' },
+  sourceLocal: { zh: '本地模板', en: 'Local template' },
   errorTitle: { zh: '目标 vs 实际', en: 'Target vs actual' },
   errorHint: { zh: '约束优化求解的逐维匹配误差', en: 'Per-dimension match error from constrained optimization' },
   labelTarget: { zh: '目标', en: 'Target' },

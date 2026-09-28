@@ -1,6 +1,8 @@
 import type { SelectionPlan, MaterialCandidate } from './materialSelector';
 import type { BoothStep, FormulaResponse, NoteItem, TargetVector, VectorError } from './types';
 import { TARGET_DIMS, targetVectorToArray, weightsToArray } from './intentVector';
+import type { Lang } from './i18n';
+import { displayNameList, localizeTerms } from './localization';
 
 /**
  * 约束优化求解器（lib/optimizer.ts）
@@ -49,6 +51,16 @@ const DIM_LABELS: Record<(typeof TARGET_DIMS)[number], string> = {
   watery: '水感',
   warm: '温暖',
   intensity: '强度'
+};
+
+const DIM_LABELS_EN: Record<(typeof TARGET_DIMS)[number], string> = {
+  fresh: 'Fresh',
+  sweet: 'Sweet',
+  floral: 'Floral',
+  woody: 'Woody',
+  watery: 'Aquatic',
+  warm: 'Warm',
+  intensity: 'Intensity'
 };
 
 const MAX_ITER = 3000;
@@ -201,7 +213,7 @@ function sprayDistance(percentage: number): string {
   return '8-9cm';
 }
 
-function buildStep(item: PoolItem, percentage: number): BoothStep {
+function buildStep(item: PoolItem, percentage: number, lang: Lang): BoothStep {
   const distance = sprayDistance(percentage);
   return {
     material: item.candidate.material.nameZh,
@@ -209,11 +221,13 @@ function buildStep(item: PoolItem, percentage: number): BoothStep {
     percentage: Math.round(percentage),
     distance,
     waitSeconds: 10,
-    instruction: `喷 1 下，距离 ${distance}，等待 10 秒`
+    instruction: lang === 'en'
+      ? `Dispense once from ${distance} away, then wait 10 seconds`
+      : `喷 1 下，距离 ${distance}，等待 10 秒`
   };
 }
 
-function buildFormula(items: PoolItem[], w: number[], plan: SelectionPlan, target: TargetVector, error: VectorError): FormulaResponse {
+function buildFormula(items: PoolItem[], w: number[], plan: SelectionPlan, target: TargetVector, error: VectorError, lang: Lang): FormulaResponse {
   const topNotes: NoteItem[] = [];
   const heartNotes: NoteItem[] = [];
   const baseNotes: NoteItem[] = [];
@@ -234,23 +248,32 @@ function buildFormula(items: PoolItem[], w: number[], plan: SelectionPlan, targe
       max.percentage += 100 - total;
     }
   }
-  const topNames = topNotes.map((note) => note.name).join('和');
-  const heartNames = heartNotes.map((note) => note.name).join('和');
-  const baseNames = baseNotes.map((note) => note.name).join('和');
+  const topNames = displayNameList(topNotes.map((note) => note.name), lang);
+  const heartNames = displayNameList(heartNotes.map((note) => note.name), lang);
+  const baseNames = displayNameList(baseNotes.map((note) => note.name), lang);
 
   const intent = plan.intent;
-  const style = intent.moods.includes('浪漫')
-    ? '克制花香记忆款'
-    : intent.desiredFacets.watery >= 4
-      ? '清透水感试香'
-      : intent.desiredFacets.warm >= 4
-        ? '温暖沉稳氛围香'
-        : '清新日常款';
-  const keywords = [
+  const style = lang === 'en'
+    ? intent.moods.includes('浪漫')
+      ? 'Restrained floral signature'
+      : intent.desiredFacets.watery >= 4
+        ? 'Sheer aquatic blend'
+        : intent.desiredFacets.warm >= 4
+          ? 'Warm grounded blend'
+          : 'Fresh everyday blend'
+    : intent.moods.includes('浪漫')
+      ? '克制花香记忆款'
+      : intent.desiredFacets.watery >= 4
+        ? '清透水感试香'
+        : intent.desiredFacets.warm >= 4
+          ? '温暖沉稳氛围香'
+          : '清新日常款';
+  const rawKeywords = [
     ...(intent.moods.length ? intent.moods.slice(0, 2) : ['易接受', '有个性']),
     ...(intent.constraints.includes('低门槛') ? ['低门槛'] : ['有层次'])
   ].slice(0, 3);
-  const scenarios = intent.scenarios.length ? intent.scenarios : ['日常使用', '个性定制'];
+  const keywords = localizeTerms(rawKeywords, lang, ['approachable', 'distinctive', 'layered']);
+  const scenarios = localizeTerms(intent.scenarios, lang, lang === 'en' ? ['everyday wear', 'personal styling'] : ['日常使用', '个性定制']);
 
   return {
     fragrancePositioning: {
@@ -260,27 +283,41 @@ function buildFormula(items: PoolItem[], w: number[], plan: SelectionPlan, targe
     },
     formula: { topNotes, heartNotes, baseNotes },
     blendingSuggestion: {
-      recommendedConcentration: '配方按前调 → 中调 → 后调顺序，由 Aromacell 自动按比例调配。'
+      recommendedConcentration: lang === 'en'
+        ? 'Aromacell blends the formula proportionally from top to heart to base notes.'
+        : '配方按前调 → 中调 → 后调顺序，由 Aromacell 自动按比例调配。'
     },
     boothSteps: [...topNotes, ...heartNotes, ...baseNotes]
       .map((note) => {
         const item = items.find((candidate) => candidate.candidate.material.nameZh === note.name);
-        return item ? buildStep(item, note.percentage) : null;
+        return item ? buildStep(item, note.percentage, lang) : null;
       })
       .filter((step): step is BoothStep => step !== null),
     finalEffect: {
-      opening: `${topNames || '前调'}先给出第一印象，让香气开场更明亮、更容易接近。`,
-      heart: `${heartNames || '中调'}负责主体性格，让香气从单一气味变成有主题的体验。`,
-      drydown: `${baseNames || '后调'}负责收尾和稳定度，让香水从新鲜开场过渡到有记忆点的尾调。`,
-      sillage: allNotes.some((note) => note.percentage >= 35) ? '中等扩散，适合近距离闻香' : '轻到中等扩散，适合第一次体验',
-      longevity: '约 3-6 小时留香，建议使用后 2-3 小时左右观察尾调变化'
+      opening: lang === 'en'
+        ? `The top notes (${topNames || 'the opening accord'}) create a bright, approachable first impression.`
+        : `${topNames || '前调'}先给出第一印象，让香气开场更明亮、更容易接近。`,
+      heart: lang === 'en'
+        ? `The heart (${heartNames || 'the central accord'}) defines the main character and gives the scent a clear theme.`
+        : `${heartNames || '中调'}负责主体性格，让香气从单一气味变成有主题的体验。`,
+      drydown: lang === 'en'
+        ? `The base (${baseNames || 'the drydown accord'}) creates a stable, memorable finish.`
+        : `${baseNames || '后调'}负责收尾和稳定度，让香水从新鲜开场过渡到有记忆点的尾调。`,
+      sillage: lang === 'en'
+        ? allNotes.some((note) => note.percentage >= 35) ? 'Moderate projection for close-range wear' : 'Light-to-moderate projection for an easy first wear'
+        : allNotes.some((note) => note.percentage >= 35) ? '中等扩散，适合近距离闻香' : '轻到中等扩散，适合第一次体验',
+      longevity: lang === 'en'
+        ? 'Approximately 3–6 hours; check the drydown after 2–3 hours'
+        : '约 3-6 小时留香，建议使用后 2-3 小时左右观察尾调变化'
     },
     adjustments: {
-      fresher: '想更清爽，下一轮提高日系柑橘或海上风铃的比例。',
-      softer: '想更柔和，下一轮增加桂花乌龙，让边缘更圆润。',
-      longerLasting: '想让概念上的尾调更稳，下一轮可以小幅提高无人之境玫瑰。'
+      fresher: lang === 'en' ? 'For a fresher version, increase Japanese Citrus or Sea Breeze Bell.' : '想更清爽，下一轮提高日系柑橘或海上风铃的比例。',
+      softer: lang === 'en' ? 'For a softer version, add more Osmanthus Oolong.' : '想更柔和，下一轮增加桂花乌龙，让边缘更圆润。',
+      longerLasting: lang === 'en' ? 'For a steadier drydown, slightly increase Desert Rose.' : '想让概念上的尾调更稳，下一轮可以小幅提高无人之境玫瑰。'
     },
-    safetyNote: '请在工作人员指导下体验，避免接触眼睛、口鼻和伤口；敏感体质请先小范围测试。',
+    safetyNote: lang === 'en'
+      ? 'Use as directed. Avoid contact with eyes, mouth, nose, and broken skin; patch-test first if you are sensitive.'
+      : '请在工作人员指导下体验，避免接触眼睛、口鼻和伤口；敏感体质请先小范围测试。',
     targetVector: target,
     error,
     solveMode: 'enum'
@@ -291,7 +328,7 @@ function buildFormula(items: PoolItem[], w: number[], plan: SelectionPlan, targe
  * 主入口：枚举 + PGD 求解最优配方。
  * 返回 null 表示求解失败（应回退启发式兜底）。
  */
-export function solveFormula(plan: SelectionPlan, target: TargetVector): SolverOutput | null {
+export function solveFormula(plan: SelectionPlan, target: TargetVector, lang: Lang = 'zh'): SolverOutput | null {
   const pool = buildPool(plan);
   if (pool.length < 3) return null;
 
@@ -316,7 +353,7 @@ export function solveFormula(plan: SelectionPlan, target: TargetVector): SolverO
 
   const perDimension = TARGET_DIMS.map((dim, k) => ({
     dim,
-    label: DIM_LABELS[dim],
+    label: lang === 'en' ? DIM_LABELS_EN[dim] : DIM_LABELS[dim],
     target: yRaw[k],
     actual: Math.round(best!.AwRaw[k] * 100) / 100,
     diff: Math.round(Math.abs(best!.AwRaw[k] - yRaw[k]) * 100) / 100
@@ -327,6 +364,6 @@ export function solveFormula(plan: SelectionPlan, target: TargetVector): SolverO
     l1: Math.round(best.l1 * 10000) / 10000
   };
 
-  const formula = buildFormula(best.items, best.w, plan, target, error);
+  const formula = buildFormula(best.items, best.w, plan, target, error, lang);
   return { formula, error };
 }

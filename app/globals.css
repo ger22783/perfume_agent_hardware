@@ -83,6 +83,8 @@ button { color: inherit; }
   font-weight: 700;
 }
 .mode-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 3px rgba(83, 199, 193, .15); }
+.mode-pill.is-live .mode-dot { background: #26a269; box-shadow: 0 0 0 3px rgba(38, 162, 105, .15); }
+.mode-pill.is-local .mode-dot { background: #e69555; box-shadow: 0 0 0 3px rgba(230, 149, 85, .16); }
 .language-switch { display: flex; padding: 3px; border: 1.5px solid rgba(95, 75, 75, .28); border-radius: 8px; background: var(--white); box-shadow: 3px 3px 0 rgba(143, 199, 232, .32); }
 .language-switch button { border: 0; border-radius: 5px; background: transparent; padding: 6px 10px; color: var(--muted); font-size: 12px; font-weight: 800; cursor: pointer; }
 .language-switch button.is-active { background: var(--ink); color: var(--white); }

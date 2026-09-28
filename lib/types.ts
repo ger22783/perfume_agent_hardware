@@ -49,6 +49,7 @@ export type VectorError = {
 
 /** 配方求解模式：enum=约束优化枚举求解；heuristic=启发式兜底；explain=解释追问保留原配方 */
 export type SolveMode = 'enum' | 'heuristic' | 'explain';
+export type GenerationSource = 'llm' | 'local';
 
 export type FormulaResponse = {
   fragrancePositioning: {
@@ -94,6 +95,10 @@ export type GenerateResponse = {
   sessionId: string;
   replyText: string;
   formula: FormulaResponse;
+  ai: {
+    intent: GenerationSource;
+    explanation: GenerationSource;
+  };
 };
 
 function toStringValue(value: unknown): string {

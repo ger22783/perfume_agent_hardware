@@ -1,5 +1,7 @@
 import type { ScentFacets } from '@/data/ingredients';
 import { analyzeIntent, type IntentProfile } from './intent';
+import type { Lang } from './i18n';
+import { getLlmConfig } from './llmConfig';
 
 type RawIntent = {
   desiredFacets?: Partial<Record<keyof ScentFacets, unknown>>;
@@ -11,14 +13,6 @@ type RawIntent = {
 };
 
 const facetKeys: Array<keyof ScentFacets> = ['fresh', 'sweet', 'floral', 'woody', 'watery', 'warm'];
-
-function getEnv(name: string) {
-  return process.env[name]?.trim();
-}
-
-function normalizeBaseUrl(baseUrl: string) {
-  return baseUrl.replace(/\/+$/, '');
-}
 
 function extractJsonObject(content: string) {
   const text = content.trim();
@@ -63,26 +57,24 @@ function normalizeIntent(raw: RawIntent, input: string, fallback: IntentProfile)
   };
 }
 
-export async function analyzeIntentWithLLM(input: string): Promise<IntentProfile> {
+export async function analyzeIntentWithLLM(input: string, lang: Lang = 'zh'): Promise<{ intent: IntentProfile; source: 'llm' | 'local' }> {
   const fallback = analyzeIntent(input);
-  const apiKey = getEnv('OPENAI_API_KEY');
-  if (!apiKey) return fallback;
+  const config = getLlmConfig();
+  if (!config) return { intent: fallback, source: 'local' };
 
-  const baseUrl = normalizeBaseUrl(getEnv('OPENAI_BASE_URL') || 'https://api.openai.com/v1');
-  const model = getEnv('OPENAI_MODEL') || 'gpt-4.1-mini';
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 4500);
 
   try {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    const response = await fetch(`${config.baseUrl}/chat/completions`, {
       method: 'POST',
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`
+        Authorization: `Bearer ${config.apiKey}`
       },
       body: JSON.stringify({
-        model,
+        model: config.model,
         max_tokens: 700,
         temperature: 0.1,
         response_format: { type: 'json_object' },
@@ -90,10 +82,11 @@ export async function analyzeIntentWithLLM(input: string): Promise<IntentProfile
           {
             role: 'system',
             content: [
-              '你是香水路演 Agent 的需求理解模块，只负责把用户自然语言解析成 JSON，不生成配方。',
+              '你是专业调香 Agent 的需求理解模块，只负责把用户自然语言解析成 JSON，不生成配方。',
               'facets 取值 0-5：fresh 清爽干净，sweet 甜感美食，floral 花香，woody 木质烟熏，watery 水感海风雨后，warm 温暖咖啡香草。',
               '要识别反向需求，例如“不甜”“不要奶茶感”“不要寺庙感”“别太浓”“不要玫瑰”。',
               'scenarios、moods、dislikes、constraints 用简短中文词组。不要编造原料名。',
+              `用户界面语言是 ${lang === 'en' ? '英文' : '中文'}，但此 JSON 仅供内部算法使用，数组值仍使用上述中文规范词。`,
               '只输出 JSON，结构为 {"desiredFacets":{"fresh":0,"sweet":0,"floral":0,"woody":0,"watery":0,"warm":0},"scenarios":[],"moods":[],"dislikes":[],"constraints":[],"explanationLike":false}'
             ].join('\n')
           },
@@ -102,13 +95,13 @@ export async function analyzeIntentWithLLM(input: string): Promise<IntentProfile
       })
     });
 
-    if (!response.ok) return fallback;
+    if (!response.ok) return { intent: fallback, source: 'local' };
     const data = await response.json();
     const content = data?.choices?.[0]?.message?.content || '';
-    if (!content) return fallback;
-    return normalizeIntent(extractJsonObject(content), input, fallback);
+    if (!content) return { intent: fallback, source: 'local' };
+    return { intent: normalizeIntent(extractJsonObject(content), input, fallback), source: 'llm' };
   } catch {
-    return fallback;
+    return { intent: fallback, source: 'local' };
   } finally {
     clearTimeout(timeout);
   }

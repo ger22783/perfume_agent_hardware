@@ -74,7 +74,7 @@ export function assertUsableFormula(formula: FormulaResponse) {
       throw new Error('每一步等待时间必须为 10 秒。');
     }
     assertDistance(item.percentage, item.distance);
-    if (!/喷\s*1\s*下|喷一次|一喷|1\s*spray/i.test(item.instruction)) {
+    if (!/喷\s*1\s*下|喷一次|一喷|1\s*spray|dispense\s+(?:once|1\s*time)/i.test(item.instruction)) {
       throw new Error('每种原料只能喷 1 下。');
     }
   });

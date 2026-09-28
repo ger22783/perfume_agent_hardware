@@ -1,4 +1,6 @@
 import type { FormulaResponse } from './types';
+import type { Lang } from './i18n';
+import { materialDisplayName } from './localization';
 
 /**
  * 提示词模块（改造后）
@@ -8,8 +10,8 @@ import type { FormulaResponse } from './types';
  * 模型只负责把配方结构 + 目标向量 + 误差翻译成人话（可选开关）。
  */
 
-export const SYSTEM_PROMPT =
-  '你是 iGEM 路演展台里的专业调香体验 Agent 的「解释助手」。' +
+const SYSTEM_PROMPT_ZH =
+  '你是专业调香体验 Agent 的解释助手。' +
   '你的唯一任务是：根据给定的【配方结构】【目标香气向量】【预测香气与误差】，把配方写成人话解释，' +
   '让第一次闻香的路人也能听懂「为什么这样配」。\n\n' +
   '硬性规则：\n' +
@@ -23,11 +25,49 @@ export const SYSTEM_PROMPT =
   '  "replyText": "300 字以内的专业中文解释，只包含香气定位、核心选材逻辑和基于误差的可调整方向"\n' +
   '}';
 
+const SYSTEM_PROMPT_EN =
+  'You are the explanation assistant for a professional fragrance-formulation Agent. ' +
+  'Your only job is to explain the supplied formula, target scent vector, prediction, and error in clear language so a first-time user understands why the materials work together.\n\n' +
+  'Hard rules:\n' +
+  '1. replyText must be entirely in English, under 180 words, in natural prose without markdown headings.\n' +
+  '2. Explain only the current formula. Never change ratios or invent materials.\n' +
+  '3. Discuss positioning, core material logic, and possible refinement directions. Do not repeat dispensing distance, timing, or procedural steps.\n' +
+  '4. Use only the supplied numerical data.\n' +
+  '5. Output JSON only, with no markdown or hidden reasoning.\n\n' +
+  'Output schema: {"replyText":"English explanation under 180 words"}';
+
+export function getSystemPrompt(lang: Lang) {
+  return lang === 'en' ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT_ZH;
+}
+
 /** 把配方结构 + 目标向量 + 误差格式化为解释上下文 */
-export function buildExplanationContext(formula: FormulaResponse): string {
+export function buildExplanationContext(formula: FormulaResponse, lang: Lang = 'zh'): string {
   const positioning = formula.fragrancePositioning;
   const formatNotes = (notes?: Array<{ name: string; percentage: number }>) =>
-    notes?.map((item) => `${item.name} ${item.percentage}%`).join('、') || '无';
+    notes?.map((item) => `${materialDisplayName(item.name, lang)} ${item.percentage}%`).join(lang === 'en' ? ', ' : '、') || (lang === 'en' ? 'none' : '无');
+
+  if (lang === 'en') {
+    const lines = [
+      '[Positioning]',
+      `Style: ${positioning.style}; keywords: ${positioning.keywords.join(', ')}; occasions: ${positioning.suitableScenarios.join(', ')}`,
+      '[Formula]',
+      `Top: ${formatNotes(formula.formula.topNotes)}`,
+      `Heart: ${formatNotes(formula.formula.heartNotes)}`,
+      `Base: ${formatNotes(formula.formula.baseNotes)}`
+    ];
+    if (formula.targetVector) {
+      const target = formula.targetVector;
+      lines.push('[Target scent vector]');
+      lines.push(`fresh ${target.facets.fresh}, sweet ${target.facets.sweet}, floral ${target.facets.floral}, woody ${target.facets.woody}, aquatic ${target.facets.watery}, warm ${target.facets.warm}, intensity ${target.intensity}`);
+    }
+    if (formula.error) {
+      lines.push('[Prediction and per-dimension error]');
+      formula.error.perDimension.forEach((item) => lines.push(`${item.label}: target ${item.target}, actual ${item.actual}, difference ${item.diff}`));
+      lines.push(`Total error ||Aw−y||² = ${formula.error.total}`);
+    }
+    lines.push('Return a natural, professional, friendly explanation in English.');
+    return lines.join('\n');
+  }
 
   const lines: string[] = [
     '【香气定位】',
