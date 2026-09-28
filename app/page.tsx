@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import QRCode from 'qrcode';
+import { useEffect, useMemo, useState } from 'react';
 import { activeHardwareProfile, type PumpSlot } from '@/data/hardwareProfile';
 import type { ChatMessage, GenerateResponse, NoteItem } from '@/lib/types';
 import { quickPrompts, type Lang, t } from '@/lib/i18n';
@@ -28,7 +27,6 @@ export default function HomePage() {
   const [dispatchMode, setDispatchMode] = useState<'hardware' | 'simulated'>('simulated');
   const [batchGrams, setBatchGrams] = useState<number>(DEFAULT_BATCH_GRAMS);
   const [dispatchDetails, setDispatchDetails] = useState<DispatchResponse | null>(null);
-  const qrCanvas = useRef<HTMLCanvasElement>(null);
 
   const prompts = useMemo(() => quickPrompts.map((prompt) => prompt[lang]), [lang]);
   const scrollingPrompts = useMemo(() => [...prompts, ...prompts], [prompts]);
@@ -36,15 +34,6 @@ export default function HomePage() {
   useEffect(() => {
     document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
   }, [lang]);
-
-  useEffect(() => {
-    if (!qrCanvas.current) return;
-    QRCode.toCanvas(qrCanvas.current, window.location.origin, {
-      width: 104,
-      margin: 1,
-      color: { dark: '#3f394b', light: '#fffaf4' }
-    });
-  }, []);
 
   function tr(key: keyof typeof t) {
     return t[key][lang];
@@ -174,7 +163,7 @@ export default function HomePage() {
       <div className="booth-shell">
         <header className="site-header">
           <div className="brand-lockup">
-            <div className="brand-mark" aria-hidden="true">A</div>
+            <img src="/brand/team-logo-westlake.png" alt="Westlake iGEM" className="brand-logo" />
             <div>
               <p className="brand-name">{tr('brandName')}</p>
               <p className="brand-team">{tr('brandTeam')}</p>
@@ -192,11 +181,13 @@ export default function HomePage() {
         <section className="hero-card">
           <div className="hero-copy">
             <p className="eyebrow">{tr('eyebrow')}</p>
-            <h1>{tr('heroTitle')}</h1>
+            <h1>{lang === 'zh' ? <>几十秒，<span className="hero-title-tail">生成属于你的专属香水</span></> : tr('heroTitle')}</h1>
             <p className="hero-description">{tr('heroDesc')}</p>
             <div className="hand-line" aria-hidden="true" />
           </div>
-          <div className="qr-card"><canvas ref={qrCanvas} /><p>{tr('qrHint')}</p></div>
+          <div className="mascot-stage" aria-label={lang === 'zh' ? '走动的团队吉祥物' : 'Walking team mascot'}>
+            <img src="/brand/floral-mascot.gif" alt="" aria-hidden="true" />
+          </div>
         </section>
 
         <Panel className="materials-panel">

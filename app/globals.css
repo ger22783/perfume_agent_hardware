@@ -65,20 +65,7 @@ button { color: inherit; }
   align-items: center;
 }
 .brand-lockup { gap: 10px; }
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border: 1.5px solid var(--line);
-  border-radius: 50% 46% 52% 44%;
-  background: linear-gradient(145deg, var(--yellow), var(--pink));
-  box-shadow: 3px 4px 0 rgba(143, 199, 232, .42);
-  font-family: Georgia, serif;
-  font-size: 24px;
-  font-weight: 800;
-  transform: rotate(-3deg);
-}
+.brand-logo { width: 52px; height: 52px; object-fit: contain; }
 .brand-name, .brand-team, .eyebrow, .section-kicker, .qr-card p, .message-role, .notes-title, .pump-tag { margin: 0; }
 .brand-name { font-size: 15px; font-weight: 800; }
 .brand-team { margin-top: 2px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .04em; }
@@ -118,11 +105,12 @@ button { color: inherit; }
 .hero-copy { position: relative; z-index: 2; max-width: 800px; }
 .eyebrow, .section-kicker { color: var(--coral); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .hero-card h1 { max-width: 780px; margin: 12px 0 14px; font-size: clamp(36px, 5.2vw, 68px); line-height: .98; letter-spacing: -.045em; text-wrap: balance; }
+.hero-title-tail { white-space: nowrap; }
 .hero-description { max-width: 720px; margin: 0; color: var(--muted); font-size: 16px; font-weight: 600; line-height: 1.75; }
 .hand-line { width: 210px; height: 12px; margin-top: 15px; border-top: 5px solid rgba(247, 223, 136, .72); border-radius: 50%; transform: rotate(-1deg); }
-.qr-card { position: relative; z-index: 2; width: 132px; padding: 10px; border: 1.5px solid rgba(95, 75, 75, .28); border-radius: 8px; background: var(--paper); box-shadow: 4px 5px 0 rgba(143, 199, 232, .42); text-align: center; transform: rotate(1deg); }
-.qr-card canvas { width: 104px !important; height: 104px !important; }
-.qr-card p { margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.3; }
+.mascot-stage { position: relative; z-index: 2; display: grid; place-items: center; width: 230px; height: 210px; margin-left: 28px; border-radius: 48% 52% 45% 55%; background: radial-gradient(circle, rgba(159, 217, 191, .2), transparent 68%); }
+.mascot-stage::after { content: ""; position: absolute; left: 28px; right: 18px; bottom: 10px; height: 12px; border-radius: 50%; background: rgba(95, 75, 75, .12); filter: blur(5px); }
+.mascot-stage img { position: relative; z-index: 1; width: 205px; height: 205px; object-fit: contain; filter: drop-shadow(4px 6px 0 rgba(143, 199, 232, .22)); }
 
 .paper-panel { min-width: 0; padding: 22px; border: 1.5px solid rgba(95, 75, 75, .23); border-radius: var(--radius); background: rgba(255, 255, 255, .86); box-shadow: 4px 5px 0 rgba(247, 223, 136, .45); }
 .paper-panel h2 { margin: 5px 0 0; font-size: 21px; line-height: 1.2; }
@@ -265,13 +253,14 @@ button { color: inherit; }
   .booth-shell { width: min(100% - 20px, 1240px); padding-top: 10px; }
   .brand-lockup, .brand-lockup > div { min-width: 0; }
   .brand-name, .brand-team { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .brand-mark { width: 42px; height: 42px; }
+  .brand-logo { width: 44px; height: 44px; }
   .brand-name { font-size: 13px; }
   .mode-pill { display: none; }
   .hero-card { grid-template-columns: 1fr; min-height: auto; padding: 26px 20px 22px; }
   .hero-card h1 { font-size: 39px; }
   .hero-description { font-size: 14px; }
-  .qr-card { display: none; }
+  .mascot-stage { width: 170px; height: 160px; margin: 8px auto -4px; }
+  .mascot-stage img { width: 160px; height: 160px; }
   .paper-panel { padding: 18px; }
   .panel-heading-row { align-items: flex-start; flex-direction: column; gap: 5px; }
   .materials-panel .panel-hint { text-align: left; }

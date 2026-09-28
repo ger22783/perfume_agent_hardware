@@ -19,12 +19,12 @@ export const t = {
   siteTitle: { zh: 'Aromacell Formula Lab', en: 'Aromacell Formula Lab' },
   brandName: { zh: 'AI 个性化香氛', en: 'AI Personalized Fragrance' },
   brandTeam: { zh: '西湖大学 iGEM 2026', en: 'iGEM Westlake 2026' },
-  eyebrow: { zh: '合成生物学 × AI × 自动调配', en: 'SYNTHETIC BIOLOGY × AI × AUTOMATED BLENDING' },
+  eyebrow: { zh: 'PERFUME AGENT · 定制香水', en: 'PERFUME AGENT · CUSTOM FRAGRANCE' },
   cardNumber: { zh: '配方工作台 · 专业版', en: 'FORMULA DESK · PRO EDITION' },
-  heroTitle: { zh: '把感觉，变成一杯看得见的配方', en: 'Turn a feeling into a visible formula' },
+  heroTitle: { zh: '几十秒，生成属于你的专属香水', en: 'Your signature fragrance in seconds' },
   heroDesc: {
-    zh: '描述你想要的香气感觉，Agent 会在四路概念原料中求解比例，再由 Aromacell 称重调配成彩色水溶液。路演输出用于展示算法与硬件闭环，不是真实香水。',
-    en: 'Describe the scent you imagine. The agent solves a four-material formula and Aromacell blends a colored-water visualization by weight. The booth output demonstrates the algorithm and hardware loop; it is not perfume.'
+    zh: '告诉它你今天想要的感觉——清爽、水感、木质还是甜暖，你今天的任何需求——约会、开会还是参加户外活动，或者今天的天气情况。Agent 会从原料库中求解出最贴近你需求的配方，一键发送到你的 Aromacell，由它按比例自动调配出专属于你的香水。',
+    en: 'Tell it how you want to feel today—fresh, watery, woody, or warm and sweet—and what you need it for, from a date or meeting to an outdoor event or the day’s weather. The Agent solves the closest formula from the material library and sends it to Aromacell for automatic proportional blending.'
   },
   qrHint: { zh: '扫码在手机上体验', en: 'Scan to try on your phone' },
   modeEnum: { zh: '约束优化', en: 'Optimized' },
