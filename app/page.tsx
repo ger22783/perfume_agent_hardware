@@ -198,10 +198,6 @@ export default function HomePage() {
           <div className="material-grid">
             {activeHardwareProfile.pumps.map((slot) => <MaterialCard key={slot.pump} slot={slot} lang={lang} tr={tr} />)}
           </div>
-          <div className="simulation-notice">
-            <strong>{tr('simulationNotice')}</strong>
-            <span>{tr('simulationNoticeDesc')}</span>
-          </div>
         </Panel>
 
         <section className="workspace-grid">
@@ -406,7 +402,6 @@ function MaterialCard({ slot, lang, tr }: { slot: PumpSlot; lang: Lang; tr: (key
         <div><dt>{tr('materialConcentration')}</dt><dd>{slot.dyeConcentrationPctWv}% w/v</dd></div>
         <div><dt>{tr('materialDensity')}</dt><dd>≈ {slot.estimatedDensityGPerMl.toFixed(3)} g/mL</dd></div>
       </dl>
-      <p className="dye-recipe">{lang === 'zh' ? slot.dyeRecipeZh : slot.dyeRecipeEn}</p>
     </article>
   );
 }

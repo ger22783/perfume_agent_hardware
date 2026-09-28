@@ -134,7 +134,7 @@ function buildFormula(plan: SelectionPlan): FormulaResponse {
       softer: '想更柔和，下一轮增加桂花乌龙，让边缘更圆润。',
       longerLasting: '想让概念上的尾调更稳，下一轮可以小幅提高无人之境玫瑰。'
     },
-    safetyNote: '路演设备输出的是食品级色素水溶液，只用于展示配比与自动调配，不可饮用，也不代表真实香水的气味、留香或安全属性。'
+    safetyNote: '请在工作人员指导下体验，避免接触眼睛、口鼻和伤口；敏感体质请先小范围测试。'
   };
 }
 

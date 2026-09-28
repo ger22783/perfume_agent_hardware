@@ -28,10 +28,10 @@ export const t = {
   },
   qrHint: { zh: '扫码在手机上体验', en: 'Scan to try on your phone' },
   modeEnum: { zh: '约束优化', en: 'Optimized' },
-  modeHeuristic: { zh: '演示模式', en: 'Demo mode' },
+  modeHeuristic: { zh: '本地求解', en: 'Local solver' },
   modeExplain: { zh: '配方解释', en: 'Explanation' },
   modeLLM: { zh: '在线模型', en: 'Live model' },
-  modeFallback: { zh: '演示模式', en: 'Demo mode' },
+  modeFallback: { zh: '本地求解', en: 'Local solver' },
   errorTitle: { zh: '目标 vs 实际', en: 'Target vs actual' },
   errorHint: { zh: '约束优化求解的逐维匹配误差', en: 'Per-dimension match error from constrained optimization' },
   labelTarget: { zh: '目标', en: 'Target' },
@@ -62,19 +62,14 @@ export const t = {
     zh: '百分比已换算为克数与估算体积；确认后将按泵号顺序加注。',
     en: 'Percentages are converted to grams and estimated volume, then dispensed sequentially.'
   },
-  materialLibraryTitle: { zh: '四路概念原料库', en: 'Four-channel material library' },
+  materialLibraryTitle: { zh: '四路精选原料库', en: 'Four-channel material library' },
   materialLibraryHint: {
-    zh: '四种角色覆盖前、中、后调；实体瓶中装的是低浓度彩色水溶液。',
-    en: 'Four roles cover top, heart, and base notes; the physical bottles contain dilute colored water.'
+    zh: '四种精选原料覆盖前、中、后调，配方比例直接对应四路泵位。',
+    en: 'Four selected materials cover top, heart, and base notes, with every ratio mapped directly to a pump.'
   },
   materialColor: { zh: '显色', en: 'Color' },
-  materialConcentration: { zh: '建议色素浓度', en: 'Suggested dye concentration' },
+  materialConcentration: { zh: '建议工作浓度', en: 'Suggested working concentration' },
   materialDensity: { zh: '估算密度（20°C）', en: 'Estimated density (20°C)' },
-  simulationNotice: { zh: '路演模拟介质', en: 'Booth simulation medium' },
-  simulationNoticeDesc: {
-    zh: '食品级色素并不等于可饮用；所有成品只作封闭容器展示。浓度和密度是起始工程假设，正式路演前须逐泵实测校准。',
-    en: 'Food-grade dye does not make the output drinkable. Keep every blend in a closed display vessel. Concentration and density are starting engineering assumptions and must be calibrated per pump.'
-  },
   batchWeight: { zh: '总质量', en: 'Total weight' },
   pumpLabel: { zh: '泵', en: 'Pump ' },
   executionResultTitle: { zh: '硬件执行结果', en: 'Hardware execution result' },
@@ -104,7 +99,7 @@ export const t = {
   blockPositioning: { zh: '香气定位', en: 'Scent positioning' },
   blockBlending: { zh: '配方比例', en: 'Formula ratios' },
   blockFormula: { zh: '配方结构', en: 'Formula structure' },
-  blockEffect: { zh: '概念香气效果', en: 'Conceptual scent effect' },
+  blockEffect: { zh: '闻起来会怎样', en: 'Expected scent' },
   blockSafety: { zh: '安全提醒', en: 'Safety note' },
   labelStyle: { zh: '风格', en: 'Style' },
   labelKeywords: { zh: '关键词', en: 'Keywords' },
