@@ -130,10 +130,13 @@ python -m uvicorn hardware.bridge:app --host 127.0.0.1 --port 8765
 另开一个 PowerShell 启动 Agent：
 
 ```powershell
-Copy-Item .env.example .env.local
 npm install
+npm run setup:api
+npm run check:api
 npm run dev
 ```
+
+`setup:api` 会安全地询问本机 DeepSeek Key 并写入不会上传 GitHub 的 `.env.local`；`check:api` 会真实请求一次模型接口，确认 Key、网络、地址和模型名都能工作。完整说明见 [`API_SETUP.md`](./API_SETUP.md)。
 
 确认网页的克数预览和执行结果正确后，才连接真机：
 
@@ -187,7 +190,7 @@ npm run start -- --hostname 127.0.0.1 --port 3000
 http://127.0.0.1:3000
 ```
 
-不配 `OPENAI_API_KEY` 和 `DATABASE_URL` 也能完整跑通（意图走本地规则、配方走约束优化、记录写本地 JSONL）。
+不配模型 Key 和 `DATABASE_URL` 也能运行，但页面会明确显示“本地模板”：意图走本地规则、配方走约束优化、记录写本地 JSONL。要启用动态回答，请先运行 `npm run setup:api` 和 `npm run check:api`。
 
 ## 测试
 
