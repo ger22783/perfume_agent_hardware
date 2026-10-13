@@ -1,4 +1,7 @@
 'use client';
+import { useAccount } from '@/components/AccountExperience';
+import {useLocale} from '@/components/LocaleProvider';
+import {copy} from '@/lib/accounts/locale';
 
 import { useEffect, useMemo, useState } from 'react';
 import { activeHardwareProfile, type PumpSlot } from '@/data/hardwareProfile';
@@ -14,7 +17,11 @@ import {
 } from '@/lib/hardwareRecipe';
 
 export default function HomePage() {
-  const [lang, setLang] = useState<Lang>('zh');
+  const { temporaryAnswers, refresh: refreshAccount } = useAccount();
+  const [feedbackSmelled, setFeedbackSmelled] = useState(false);
+  const [feedbackScope, setFeedbackScope] = useState('current');
+  const {lang,setLang}=useLocale();
+  const tx=(text:string)=>copy(lang,text);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<(GenerateResponse & { debug?: string }) | null>(null);
@@ -68,7 +75,7 @@ export default function HomePage() {
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, history, sessionId, currentFormula: result?.formula, lang })
+        body: JSON.stringify({ message, history, sessionId, currentGenerationId: result?.generationId, questionnaire: temporaryAnswers || undefined, lang })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || tr('fallbackReply'));
@@ -78,6 +85,8 @@ export default function HomePage() {
       setSessionId(data.sessionId || sessionId);
       setInput('');
       setRating(0);
+      setFeedbackSmelled(false);
+      setFeedbackScope('current');
       setComment('');
       setDispatchStatus('');
       setDispatchDetails(null);
@@ -97,8 +106,8 @@ export default function HomePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          generationId: result.generationId,
           sessionId: result.sessionId,
-          formula: result.formula,
           targetTotalG: batchGrams
         })
       });
@@ -133,11 +142,14 @@ export default function HomePage() {
       const response = await fetch('/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: result.sessionId, rating, comment })
+        body: JSON.stringify({ generationId: result.generationId,
+          smelled: feedbackSmelled, scope: feedbackScope,
+          sessionId: result.sessionId, rating, comment })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || tr('feedbackHint'));
       setFeedbackStatus(tr('feedbackThanks'));
+      await refreshAccount();
     } catch (caughtError) {
       setFeedbackStatus(caughtError instanceof Error ? caughtError.message : tr('feedbackHint'));
     }
@@ -366,6 +378,8 @@ export default function HomePage() {
               <Panel>
                 <p className="section-kicker">04 · FEEDBACK</p>
                 <h2>{tr('feedbackTitle')}</h2>
+                <label className="account-hint" style={{display:'block'}}><input type="checkbox" checked={feedbackSmelled} onChange={e=>setFeedbackSmelled(e.target.checked)} /> {tx("我实际闻过这份配方的香水样品（彩色液体演示不算）")}</label>
+                <label className="account-input">{tx("这次反馈希望适用于哪里？")}<select value={feedbackScope} onChange={e=>setFeedbackScope(e.target.value)}><option value="current">{lang==='en'?'This formula only':'仅这次'}</option><option value="global">{tx("以后的日常偏好（系统会先让我确认）")}</option></select></label>
                 <p className="panel-hint feedback-hint">{tr('feedbackHint')}</p>
                 <div className="rating-row">
                   {[1, 2, 3, 4, 5].map((score) => <button key={score} onClick={() => setRating(score)} className={score <= rating ? 'is-selected' : ''}>{score}</button>)}

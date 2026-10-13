@@ -57,7 +57,7 @@ function normalizeIntent(raw: RawIntent, input: string, fallback: IntentProfile)
   };
 }
 
-export async function analyzeIntentWithLLM(input: string, lang: Lang = 'zh'): Promise<{ intent: IntentProfile; source: 'llm' | 'local' }> {
+export async function analyzeIntentWithLLM(input: string, lang: Lang = 'zh', preferences?: unknown): Promise<{ intent: IntentProfile; source: 'llm' | 'local' }> {
   const fallback = analyzeIntent(input);
   const config = getLlmConfig();
   if (!config) return { intent: fallback, source: 'local' };
@@ -90,7 +90,7 @@ export async function analyzeIntentWithLLM(input: string, lang: Lang = 'zh'): Pr
               '只输出 JSON，结构为 {"desiredFacets":{"fresh":0,"sweet":0,"floral":0,"woody":0,"watery":0,"warm":0},"scenarios":[],"moods":[],"dislikes":[],"constraints":[],"explanationLike":false}'
             ].join('\n')
           },
-          { role: 'user', content: input }
+          { role: 'user', content: preferences ? JSON.stringify({ currentRequest: input, knownPreferences: preferences }) : input }
         ]
       })
     });

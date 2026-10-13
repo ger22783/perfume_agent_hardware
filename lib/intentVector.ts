@@ -53,6 +53,8 @@ export function buildTargetVector(profile: IntentProfile): TargetVector {
     intensity = 4;
   }
 
+  Object.assign(facets, Object.fromEntries(Object.entries(profile.preferenceTargets || {}).filter(([key]) => key !== 'intensity')));
+  if (profile.preferenceTargets?.intensity !== undefined) intensity = profile.preferenceTargets.intensity;
   const weights = { ...zeroWeights };
   if (profile.dislikes.includes('甜腻')) bumpWeight(weights, 'sweet', 3);
   if (profile.dislikes.includes('明显花香')) bumpWeight(weights, 'floral', 2);
@@ -63,7 +65,7 @@ export function buildTargetVector(profile: IntentProfile): TargetVector {
     facets,
     intensity,
     weights,
-    banned: []
+    banned: profile.bannedMaterialIds || []
   };
 }
 

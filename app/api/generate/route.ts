@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prepareGeneration, completeGeneration } from '@/lib/accounts/generation';
+import { personalizeIntent, profileContext } from '@/lib/accounts/personalization';
+import { failure } from '@/lib/accounts/http';
 import { activeMaterialIds } from '@/data/hardwareProfile';
 import { buildFormulaExplanation, buildOptimizedReply, isExplanationQuestion } from '@/lib/explain';
 import { generateFallback } from '@/lib/generator';
@@ -7,38 +10,14 @@ import { buildTargetVector } from '@/lib/intentVector';
 import { generateExplanation } from '@/lib/llm';
 import { selectMaterials } from '@/lib/materialSelector';
 import { solveFormula } from '@/lib/optimizer';
-import { appendBoothRecord, createSessionId } from '@/lib/records';
+
 import { sanitizeFormula } from '@/lib/types';
 import { assertUsableError, assertUsableFormula } from '@/lib/validation';
 import { explanationLlmEnabled } from '@/lib/llmConfig';
 import type { Lang } from '@/lib/i18n';
-import type { ChatMessage, FormulaResponse, GenerationSource, SolveMode } from '@/lib/types';
+import type { FormulaResponse, GenerationSource, SolveMode } from '@/lib/types';
 
-function normalizeHistory(history: unknown): ChatMessage[] {
-  if (!Array.isArray(history)) return [];
-  return history
-    .filter((item: any) => item && (item.role === 'user' || item.role === 'assistant') && typeof item.content === 'string')
-    .map((item: any) => ({ role: item.role, content: item.content }));
-}
 
-async function recordGeneration(input: {
-  sessionId: string;
-  userInput: string;
-  history: ChatMessage[];
-  mode: SolveMode;
-  replyText: string;
-  formula: any;
-}) {
-  await appendBoothRecord({
-    type: 'generation',
-    sessionId: input.sessionId,
-    userInput: input.userInput,
-    history: input.history,
-    mode: input.mode,
-    replyText: input.replyText,
-    formula: input.formula
-  });
-}
 
 /** 有模型 Key 时默认生成动态解释；API 失败时自动回退确定性模板。 */
 async function buildReplyText(formula: FormulaResponse, mode: SolveMode, lang: Lang): Promise<{ text: string; source: GenerationSource }> {
@@ -52,20 +31,15 @@ async function buildReplyText(formula: FormulaResponse, mode: SolveMode, lang: L
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const message = String(body?.message || '').trim();
-    const sessionId = String(body?.sessionId || createSessionId());
-    const currentFormula = body?.currentFormula ? sanitizeFormula(body.currentFormula) : null;
+    const ctx = await prepareGeneration(req, 'hardware');
+    const { body, message, sessionId } = ctx;
+    const currentFormula = ctx.previous?.payload.formula ? sanitizeFormula(ctx.previous.payload.formula) : null;
     const lang: Lang = body?.lang === 'en' ? 'en' : 'zh';
 
     if (!message) {
       return NextResponse.json({ error: 'message is required' }, { status: 400 });
     }
 
-    const messages: ChatMessage[] = [
-      ...normalizeHistory(body?.history),
-      { role: 'user', content: message }
-    ];
 
     // 1) 解释类追问：保留当前配方，只解释（绝不重新生成）
     if (currentFormula && isExplanationQuestion(message)) {
@@ -77,20 +51,12 @@ export async function POST(req: NextRequest) {
         ai: { intent: 'local' as const, explanation: 'local' as const }
       };
 
-      await recordGeneration({
-        sessionId,
-        userInput: message,
-        history: messages,
-        mode: response.mode,
-        replyText: response.replyText,
-        formula: response.formula
-      });
 
-      return NextResponse.json(response);
+      return await completeGeneration(ctx, response);
     }
 
-    const intentResult = await analyzeIntentWithLLM(message, lang);
-    const intent = intentResult.intent;
+    const intentResult = await analyzeIntentWithLLM(message, lang, profileContext(ctx.answers));
+    const intent = personalizeIntent(intentResult.intent, ctx.answers);
     // 自动调配模式只允许选择当前四个泵实际装载的概念原料。
     const selectionPlan = selectMaterials(intent, activeMaterialIds);
     const target = buildTargetVector(intent);
@@ -108,16 +74,8 @@ export async function POST(req: NextRequest) {
         ai: { intent: intentResult.source, explanation: 'local' as const }
       };
 
-      await recordGeneration({
-        sessionId,
-        userInput: message,
-        history: messages,
-        mode: response.mode,
-        replyText: response.replyText,
-        formula: response.formula
-      });
 
-      return NextResponse.json(response);
+      return await completeGeneration(ctx, response);
     }
 
     // 3) 主链路：约束优化求解（语言理解 → 目标向量 → 候选池 → 枚举 + 投影梯度）
@@ -138,16 +96,8 @@ export async function POST(req: NextRequest) {
         ai: { intent: intentResult.source, explanation: reply.source }
       };
 
-      await recordGeneration({
-        sessionId,
-        userInput: message,
-        history: messages,
-        mode: response.mode,
-        replyText: response.replyText,
-        formula: response.formula
-      });
 
-      return NextResponse.json(response);
+      return await completeGeneration(ctx, response);
     } catch (solverError) {
       // 4) 兜底：启发式规则配方（保证展台现场永不宕机）
       const fallback = await generateFallback(message, selectionPlan, lang);
@@ -162,20 +112,10 @@ export async function POST(req: NextRequest) {
         debug: solverError instanceof Error ? solverError.message : 'Unknown solver error'
       };
 
-      await recordGeneration({
-        sessionId,
-        userInput: message,
-        history: messages,
-        mode: response.mode,
-        replyText: response.replyText,
-        formula: response.formula
-      });
 
-      return NextResponse.json(response);
+      return await completeGeneration(ctx, response);
     }
   } catch (error) {
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : 'failed to generate response'
-    }, { status: 500 });
+    return failure(error);
   }
 }

@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buildHardwareRecipe, DEFAULT_BATCH_GRAMS } from '@/lib/hardwareRecipe';
 import { sanitizeFormula } from '@/lib/types';
 import { assertUsableFormula } from '@/lib/validation';
+import { requireUser, requireSameOrigin, readJson, failure } from '@/lib/accounts/http';
+import { getGeneration, getProfile } from '@/lib/accounts/repository';
+import { assertExclusions } from '@/lib/accounts/personalization';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,15 +19,16 @@ function makeIdempotencyKey(sessionId: string, formula: unknown, targetTotalG: n
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const sessionId = String(body?.sessionId || '').trim();
+    requireSameOrigin(req);
+    const user = await requireUser(req);
+    const body = await readJson(req);
+    const saved = await getGeneration(user.id, 'hardware', String(body.generationId || ''));
+    const sessionId = saved.session_id;
     const targetTotalG = Number(body?.targetTotalG ?? DEFAULT_BATCH_GRAMS);
-    if (!sessionId || !body?.formula) {
-      return NextResponse.json({ error: 'sessionId and formula are required' }, { status: 400 });
-    }
-
-    const formula = sanitizeFormula(body.formula);
+    const formula = sanitizeFormula(saved.payload.formula);
     assertUsableFormula(formula);
+    const profile = await getProfile(user.id);
+    if (profile) assertExclusions(formula, profile.answers);
 
     const recipe = buildHardwareRecipe({
       formula,
@@ -99,8 +103,6 @@ export async function POST(req: NextRequest) {
       deduplicated: hardwareResult?.deduplicated === true
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'failed to dispatch formula';
-    const status = message.includes('fetch failed') || message.includes('aborted') ? 502 : 400;
-    return NextResponse.json({ error: message }, { status });
+    return failure(error);
   }
 }

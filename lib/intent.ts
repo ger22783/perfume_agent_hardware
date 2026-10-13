@@ -8,6 +8,9 @@ export type IntentProfile = {
   dislikes: string[];
   constraints: string[];
   explanationLike: boolean;
+  preferenceTargets?: Partial<ScentFacets & { intensity: number }>;
+  materialPreferenceScores?: Record<string, number>;
+  bannedMaterialIds?: string[];
 };
 
 const zeroFacets: ScentFacets = {

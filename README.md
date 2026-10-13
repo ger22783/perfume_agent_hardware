@@ -219,3 +219,7 @@ npx vercel deploy --prod --yes
 - 解释追问必须保留当前配方，避免用户问“为什么要加 X”时系统答非所问并重新生成。
 - 新增原料时必须补齐 `facets`（6 维 0-5）、`intensity`（1-5）、`noteRoles`、`usageRange`，否则优化器无法求解。
 - 首页以用户体验为主，不要做成复杂专业后台；专业性主要体现在选材逻辑、优化误差展示和后台数据记录。
+
+## Accounts and bilingual interface
+
+See [ACCOUNT_SYSTEM.md](ACCOUNT_SYSTEM.md) for registration, questionnaire, preference and feedback storage, administrator access, configuration, and verification. User records are stored in Postgres; Vercel runs the web application. Configure the server environment from `.env.example`; never commit actual credentials.

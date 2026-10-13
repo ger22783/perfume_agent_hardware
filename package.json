@@ -10,23 +10,28 @@
     "lint": "next lint",
     "test": "vitest run",
     "setup:api": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-api.ps1",
-    "check:api": "node scripts/check-api.mjs"
+    "check:api": "node scripts/check-api.mjs",
+    "migrate:accounts": "tsx scripts/migrate-accounts.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
-    "next": "14.2.5",
+    "better-auth": "^1.7.7",
+    "next": "^15.5.27",
+    "pg": "^8.23.1",
     "qrcode": "^1.5.4",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
   "devDependencies": {
-    "@types/node": "20.14.10",
+    "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
     "@types/qrcode": "^1.5.6",
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
     "autoprefixer": "10.4.19",
     "postcss": "8.4.39",
     "tailwindcss": "3.4.7",
+    "tsx": "^4.23.15",
     "typescript": "5.5.3",
     "vitest": "^4.1.10"
   }

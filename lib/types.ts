@@ -91,6 +91,8 @@ export type FormulaResponse = {
 };
 
 export type GenerateResponse = {
+  generationId?: string;
+  profileVersionUsed?: number | null;
   mode: SolveMode;
   sessionId: string;
   replyText: string;
