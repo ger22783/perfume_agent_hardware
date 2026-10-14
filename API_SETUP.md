@@ -2,6 +2,8 @@
 
 这个项目不会、也不应该把 API Key 上传到 GitHub。GitHub 保存的是程序；每个运行程序的人都要在自己的电脑上创建 `.env.local`，把自己的 Key 放进去。
 
+**本文只配置模型接口。首次使用必须先完成[README中的账号数据库与登录密钥配置](README.md#2-配置本机账号系统必需)；模型Key不能替代账号配置。**
+
 ## Windows：推荐的一键配置
 
 在项目根目录打开 PowerShell：
@@ -12,6 +14,8 @@ npm run setup:api
 ```
 
 终端会要求粘贴 DeepSeek API Key。输入时屏幕不会显示字符，这是正常的安全行为。脚本会把配置写入仅本机使用的 `.env.local`。
+
+`setup:api`还会把 `HARDWARE_API_URL`设为本机Bridge地址，并清空 `HARDWARE_API_TOKEN`。已配置自定义设备地址或Token时，应使用下方手动配置，避免覆盖这些值。
 
 然后验证 API：
 
@@ -31,7 +35,7 @@ API connected successfully. Model reply: OK
 最后启动网站：
 
 ```powershell
-npm run dev
+npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
 打开 `http://127.0.0.1:3000`。生成配方后，右上角显示 `AI 实时回答 / Live AI response`，才代表这次解释文案真实使用了 API。
@@ -41,7 +45,9 @@ npm run dev
 如果不使用脚本：
 
 ```powershell
-Copy-Item .env.example .env.local
+if (-not (Test-Path -LiteralPath .env.local)) {
+    Copy-Item -LiteralPath .env.example -Destination .env.local
+}
 notepad .env.local
 ```
 
@@ -56,16 +62,9 @@ EXPLAIN_LLM=true
 
 保存后必须重启 `npm run dev`。Next.js 进程启动时读取环境变量；只修改文件但不重启，旧进程可能继续使用旧配置。
 
-## 队友克隆后的完整命令
+## 队友克隆后如何开始
 
-```powershell
-git clone https://github.com/ger22783/perfume_agent_hardware.git
-cd perfume_agent_hardware
-npm install
-npm run setup:api
-npm run check:api
-npm run dev
-```
+从[README的完整操作流程](README.md#1-准备电脑和代码)开始，包括安装依赖、账号配置、模拟Bridge和本地网页。本文的API命令是可选补充，不能单独替代完整启动流程。
 
 ## 常见问题
 

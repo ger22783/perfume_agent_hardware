@@ -2,6 +2,8 @@
 
 这份文档给负责 STM32、蠕动泵和称重模块的同伴使用。目标是把 Perfume Agent 生成的百分比配方安全地下发到现有四泵定量加注系统。
 
+**首次使用请先完成[仓库首页的账号配置与双终端启动步骤](../README.md#2-配置本机账号系统必需)。当前版本必须配置账号数据库和登录密钥，只填写模型Key不能完成注册和生成流程。**
+
 硬件同伴最初提供的说明原文保存在 [`STM32_ORIGINAL_README.md`](./STM32_ORIGINAL_README.md)。
 
 ## 先看结论
@@ -170,25 +172,28 @@ python -m unittest hardware.test_pump_host -v
 
 ## 启动 Agent 做整链路 dry-run
 
-复制环境配置：
+先按[仓库首页](../README.md#2-配置本机账号系统必需)创建 `.env.local`，填写账号数据库、登录密钥，以及 `BETTER_AUTH_URL=http://127.0.0.1:3000`。不要覆盖已经配置的文件。确认 `HARDWARE_API_URL=http://127.0.0.1:8765/v1/jobs`，让Bridge保持 `HARDWARE_DRY_RUN=true`。
+
+另开PowerShell进入仓库根目录：
 
 ```powershell
-Copy-Item .env.example .env.local
-npm install
-npm run dev
+npm ci
+npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
 打开 `http://127.0.0.1:3000`：
 
-1. 生成配方；
+1. 注册或登录，完成问卷，再生成配方；
 2. 选择10g、20g或50g；
 3. 检查页面上的泵号和克数；
 4. 点击“确定并调配”；
 5. 页面应显示“演示模式”以及每泵目标/实际克数。
 
+这不会打开串口，模拟返回的实际克数不是称重测量值。Vercel上的网页不能通过 `127.0.0.1` 连接队友电脑；当前真机联调需要在连接USB的电脑上运行Agent和Bridge。
+
 ## 连接真实 STM32
 
-必须先完成清水 dry-run 检查，再显式关闭模拟模式：
+先完成不连接串口的模拟检查，并确认固件、映射和现场停泵方式。在运行Bridge的终端按 `Ctrl+C` 停止原进程，再显式关闭模拟模式，随后用清水做真实验收。`COM10`须替换成设备管理器里的实际串口：
 
 ```powershell
 $env:HARDWARE_SERIAL_PORT="COM10"
@@ -197,7 +202,9 @@ $env:HARDWARE_TOLERANCE_G="0.5"
 python -m uvicorn hardware.bridge:app --host 127.0.0.1 --port 8765
 ```
 
-如果需要本地接口鉴权：
+`/health`中的串口号和dryRun只是配置状态，不代表串口已成功打开；执行实际任务时才会连接设备。
+
+如果需要本地接口鉴权，在启动Bridge前设置：
 
 ```powershell
 $env:HARDWARE_API_TOKEN="共同约定的随机字符串"
